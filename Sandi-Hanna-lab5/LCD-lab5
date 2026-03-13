@@ -1,0 +1,58 @@
+from RPi import GPIO
+import time
+import smbus
+
+GPIO.setmode(GPIO.BCM)
+
+I2C_ADDR = 0x27
+LCD_WIDTH = 16
+LCD_CHR = 1
+LCD_CMD = 0
+LCD_LINE_1 = 0x80
+LCD_LINE_2 = 0xC0  
+LCD_BACKLIGHT = 0x08
+ENABLE = 0x04
+INVERSE_ENABLE = 0b1111_1011
+E_PULSE = 0.0005
+E_DELAY = 0.0005
+
+i2c = smbus.SMBus(1)
+
+def set_data_bits(byte, mode):
+    MSNibble = byte & 0xF0
+    LSNibble = (byte & 0x0F) << 4
+    send_byte_with_e_toggle(MSNibble | LCD_BACKLIGHT | mode)
+    send_byte_with_e_toggle(LSNibble | LCD_BACKLIGHT | mode)
+
+def send_byte_with_e_toggle(bits):
+    time.sleep(E_DELAY)
+    i2c.write_byte(I2C_ADDR, (bits | ENABLE))
+    time.sleep(E_PULSE)
+    i2c.write_byte(I2C_ADDR, (bits & INVERSE_ENABLE))
+    time.sleep(E_DELAY)
+
+def send_instruction(byte):
+    set_data_bits(byte, LCD_CMD)
+
+def send_character(byte):
+    set_data_bits(byte, LCD_CHR)
+
+def send_string(text):
+    for char in text:
+        send_character(ord(char))
+
+def LCD_init():
+    send_byte_with_e_toggle(0x30)
+    send_byte_with_e_toggle(0x30)
+    send_byte_with_e_toggle(0x20)
+    send_instruction(0x28) 
+    send_instruction(0x0C) 
+    send_instruction(0x01) 
+    time.sleep(E_DELAY)
+
+try:
+    LCD_init()
+    time.sleep(0.1)
+    send_string("hello world")
+finally:
+    GPIO.cleanup()

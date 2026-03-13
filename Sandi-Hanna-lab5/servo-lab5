@@ -1,0 +1,36 @@
+import RPi.GPIO as GPIO
+import time
+
+GPIO.setmode(GPIO.BCM)
+servopin = 18
+GPIO.setup(servopin, GPIO.OUT)
+
+servo_pwm = GPIO.PWM(servopin, 50) 
+servo_pwm.start(0)
+
+def get_duty_cycle(angle):
+    angle = max(0, min(180, angle))
+    duty = (angle / 18.0) + 2.5
+    return duty
+
+try:
+    servo_pwm.ChangeDutyCycle(get_duty_cycle(0))
+    time.sleep(1)
+
+    servo_pwm.ChangeDutyCycle(get_duty_cycle(90))
+    time.sleep(1)
+
+    servo_pwm.ChangeDutyCycle(get_duty_cycle(180))
+    time.sleep(1)
+
+    for i in range(0, 181, 10):
+        servo_pwm.ChangeDutyCycle(get_duty_cycle(i))
+        time.sleep(0.2)
+
+finally:
+    try:
+        servo_pwm.stop()
+        del servo_pwm
+        GPIO.cleanup()
+    except:
+        pass

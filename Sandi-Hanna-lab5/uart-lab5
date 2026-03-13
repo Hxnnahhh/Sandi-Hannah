@@ -1,28 +1,35 @@
-from RPi import GPIO
+import RPi.GPIO as GPIO
 import time
 
 GPIO.setmode(GPIO.BCM)
-ledpin = 17
-GPIO.setup(ledpin, GPIO.OUT)
+
+ledPin = 17
+
+GPIO.setup(ledPin, GPIO.OUT)
+
 
 def send_byte(data, MSBFirst = False):
     for i in range(8):
         shifn = i
         if MSBFirst == True:
-            shifn - (7-i)
+            shifn = (7-i)
+
         bit_result = data & (1 << shifn)
+        
         if bit_result > 0:
             bit_result = 1
-            GPIO.output(ledpin, bit_result)
-            time.sleep(0.02)
-    pass
+        GPIO.output(ledPin, bit_result)
+        time.sleep(0.2)
+
 
 def send_string(text):
     for char in text:
         ascii_val = ord(char)
         print(ascii_val)
         send_byte(ascii_val)
-        GPIO.output(ledpin, 0)
+    GPIO.output(ledPin, 0)
 
-send_string("Hello")
+
+send_string("hello")
+
 GPIO.cleanup()
